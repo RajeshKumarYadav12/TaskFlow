@@ -10,11 +10,20 @@ services:
           name: taskflow-db
           property: connectionString
       - key: REDIS_URL
-        value: redis://taskflow-redis:6379/0
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
       - key: CELERY_BROKER_URL
-        value: redis://taskflow-redis:6379/1
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
       - key: CELERY_RESULT_BACKEND
-        value: redis://taskflow-redis:6379/1
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
     plan: free
 
   - type: worker
@@ -28,11 +37,20 @@ services:
           name: taskflow-db
           property: connectionString
       - key: REDIS_URL
-        value: redis://taskflow-redis:6379/0
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
       - key: CELERY_BROKER_URL
-        value: redis://taskflow-redis:6379/1
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
       - key: CELERY_RESULT_BACKEND
-        value: redis://taskflow-redis:6379/1
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
     plan: free
 
   - type: worker
@@ -46,18 +64,24 @@ services:
           name: taskflow-db
           property: connectionString
       - key: REDIS_URL
-        value: redis://taskflow-redis:6379/0
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
       - key: CELERY_BROKER_URL
-        value: redis://taskflow-redis:6379/1
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
       - key: CELERY_RESULT_BACKEND
-        value: redis://taskflow-redis:6379/1
+        fromService:
+          type: redis
+          name: taskflow-redis
+          property: connectionString
     plan: free
 
-  - type: pserv
+  - type: redis
     name: taskflow-redis
-    env: image
-    image:
-      url: redis:7-alpine
     plan: free
 
 databases:
