@@ -58,7 +58,6 @@ services:
     env: image
     image:
       url: redis:7-alpine
-    port: 6379
     plan: free
 
 databases:
