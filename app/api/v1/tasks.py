@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.project import Project
 from app.models.task import Task, TaskStatus
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
+from app.schemas.response import APIResponse
 from app.core.redis import get_redis
 from app.worker.tasks import create_notification
 
@@ -20,7 +21,7 @@ def invalidate_tasks_cache(user_id: int, redis_client):
     if keys:
         redis_client.delete(*keys)
 
-@router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=APIResponse[TaskResponse], status_code=status.HTTP_201_CREATED)
 def create_task(
     task_in: TaskCreate,
     db: Session = Depends(get_db),
@@ -36,9 +37,9 @@ def create_task(
     db.refresh(task)
     
     invalidate_tasks_cache(current_user.id, get_redis())
-    return task
+    return APIResponse(message="Task created successfully!", status="success", code=201, data=task)
 
-@router.get("/", response_model=List[TaskResponse])
+@router.get("/", response_model=APIResponse[List[TaskResponse]])
 def read_tasks(
     status: Optional[TaskStatus] = None,
     assignee: Optional[str] = None,
@@ -54,7 +55,7 @@ def read_tasks(
     
     cached_data = redis_client.get(cache_key)
     if cached_data:
-        return json.loads(cached_data)
+        return APIResponse(message="Tasks retrieved successfully from cache!", status="success", code=200, data=json.loads(cached_data))
 
     query = db.query(Task).join(Project).filter(Project.owner_id == current_user.id)
     
@@ -84,9 +85,9 @@ def read_tasks(
         tasks_data.append(task_dict)
         
     redis_client.setex(cache_key, 300, json.dumps(tasks_data))
-    return tasks
+    return APIResponse(message="Tasks retrieved successfully!", status="success", code=200, data=tasks)
 
-@router.get("/{task_id}", response_model=TaskResponse)
+@router.get("/{task_id}", response_model=APIResponse[TaskResponse])
 def read_task(
     task_id: int,
     db: Session = Depends(get_db),
@@ -95,9 +96,9 @@ def read_task(
     task = db.query(Task).join(Project).filter(Task.id == task_id, Project.owner_id == current_user.id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    return task
+    return APIResponse(message="Task retrieved successfully!", status="success", code=200, data=task)
 
-@router.put("/{task_id}", response_model=TaskResponse)
+@router.put("/{task_id}", response_model=APIResponse[TaskResponse])
 def update_task(
     task_id: int,
     task_in: TaskUpdate,
@@ -124,9 +125,9 @@ def update_task(
         create_notification.delay(task.id, f"Task reassigned to {task.assignee}")
 
     invalidate_tasks_cache(current_user.id, get_redis())
-    return task
+    return APIResponse(message="Task updated successfully!", status="success", code=200, data=task)
 
-@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{task_id}", response_model=APIResponse[None])
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
@@ -139,4 +140,4 @@ def delete_task(
     db.delete(task)
     db.commit()
     invalidate_tasks_cache(current_user.id, get_redis())
-    return None
+    return APIResponse(message="Task deleted successfully!", status="success", code=200, data=None)

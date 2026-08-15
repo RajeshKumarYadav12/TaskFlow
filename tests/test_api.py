@@ -9,7 +9,9 @@ def test_signup(client, db_session):
         json={"email": "test@example.com", "password": "password123"}
     )
     assert response.status_code == 201
-    data = response.json()
+    json_data = response.json()
+    assert json_data["status"] == "success"
+    data = json_data["data"]
     assert data["email"] == "test@example.com"
     assert "id" in data
 
@@ -22,16 +24,18 @@ def test_login(client, db_session):
     
     response = client.post(
         "/api/v1/auth/login",
-        data={"username": "test@example.com", "password": "password123"}
+        json={"email": "test@example.com", "password": "password123"}
     )
     assert response.status_code == 200
-    assert "access_token" in response.json()
+    json_data = response.json()
+    assert json_data["status"] == "success"
+    assert "access_token" in json_data["data"]
 
 def test_project_crud(client, db_session):
     # Signup and login
     client.post("/api/v1/auth/signup", json={"email": "test2@example.com", "password": "password123"})
-    login_res = client.post("/api/v1/auth/login", data={"username": "test2@example.com", "password": "password123"})
-    token = login_res.json()["access_token"]
+    login_res = client.post("/api/v1/auth/login", json={"email": "test2@example.com", "password": "password123"})
+    token = login_res.json()["data"]["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     
     # Create Project
@@ -41,12 +45,12 @@ def test_project_crud(client, db_session):
         headers=headers
     )
     assert response.status_code == 201
-    project_id = response.json()["id"]
+    project_id = response.json()["data"]["id"]
     
     # Get Projects
     response = client.get("/api/v1/projects/", headers=headers)
     assert response.status_code == 200
-    assert len(response.json()) == 1
+    assert len(response.json()["data"]) == 1
     
     # Create Task
     task_res = client.post(
@@ -59,5 +63,5 @@ def test_project_crud(client, db_session):
     # Get Tasks
     tasks_res = client.get("/api/v1/tasks/", headers=headers)
     assert tasks_res.status_code == 200
-    assert len(tasks_res.json()) == 1
-    assert tasks_res.json()[0]["title"] == "Test Task"
+    assert len(tasks_res.json()["data"]) == 1
+    assert tasks_res.json()["data"][0]["title"] == "Test Task"

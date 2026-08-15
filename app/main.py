@@ -2,13 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import time
 
-from app.api.v1 import auth, projects, tasks
+from app.api.v1 import auth, projects, tasks, notifications
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.core.redis import get_redis
-
-# Create tables (In a real app, use Alembic. We keep it for simplicity if no migrations are run)
-# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
@@ -71,3 +68,4 @@ def get_metrics():
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(projects.router, prefix=f"{settings.API_V1_STR}/projects", tags=["projects"])
 app.include_router(tasks.router, prefix=f"{settings.API_V1_STR}/tasks", tags=["tasks"])
+app.include_router(notifications.router, prefix=f"{settings.API_V1_STR}/notifications", tags=["notifications"])
