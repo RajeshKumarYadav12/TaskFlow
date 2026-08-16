@@ -83,7 +83,9 @@ services:
   - type: redis
     name: taskflow-redis
     plan: free
+    ipAllowList: []
 
 databases:
   - name: taskflow-db
     plan: free
+    ipAllowList: []
