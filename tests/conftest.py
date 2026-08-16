@@ -7,7 +7,8 @@ import redis
 import fakeredis
 
 from app.main import app
-from app.core.database import Base, get_db
+from app.core.database import Base
+from app.api.deps import get_db
 from app.core.redis import get_redis
 
 # Use in-memory SQLite for testing

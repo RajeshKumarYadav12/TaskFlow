@@ -9,7 +9,6 @@ celery_app = Celery(
 )
 
 
-
 from celery.schedules import crontab
 
 celery_app.conf.beat_schedule = {
