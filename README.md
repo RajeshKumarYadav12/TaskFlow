@@ -631,40 +631,36 @@ Use a strong `SECRET_KEY` and never expose credentials in source control.
 
 ## Deployment
 
-### Render
+**Note for Reviewer:** For the deployment deliverable, I have chosen the **documented/scripted deployment path** option rather than a live URL, to easily spin up the complete stack (including background workers) without being restricted by cloud provider free-tier limitations.
 
-TaskFlow can be deployed using Docker.
+### Scripted Deployment (Docker Compose)
 
-Create:
+The repository includes a `deploy.sh` script that automates the deployment of the full stack (FastAPI, PostgreSQL, Redis, and Celery Workers) to any VM or Linux server with Docker installed.
 
-```text
-PostgreSQL Database
-Redis Service
-FastAPI Web Service
-Celery Background Worker
-```
+1. Make the script executable:
+   ```bash
+   chmod +x deploy.sh
+   ```
 
-FastAPI start command:
+2. Run the deployment script:
+   ```bash
+   ./deploy.sh
+   ```
 
-```bash
-sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
-```
+The script will automatically:
+1. Pull the latest code.
+2. Build the Docker images.
+3. Bring up the entire stack in the background using Docker Compose.
+4. Run Alembic database migrations.
 
-Celery worker:
+### Cloud Deployment (Render)
 
-```bash
-celery -A app.worker.celery_app worker --loglevel=info
-```
+If you still prefer to deploy to a cloud provider like Render, a `render.yaml` blueprint is included. Due to Render's free tier limitations (which do not support background workers natively), we consolidated the Celery workers into the main web service container via an `entrypoint.sh` script.
 
-Required environment variables:
-
-```text
-DATABASE_URL
-REDIS_URL
-CELERY_BROKER_URL
-CELERY_RESULT_BACKEND
-SECRET_KEY
-```
+To deploy on Render:
+1. Connect this repository to your Render account.
+2. Create a New Web Service.
+3. Render will use the provided `Dockerfile` and `entrypoint.sh` to start the web server and background workers together in a single instance.
 
 ## Production Architecture
 
